@@ -2,32 +2,44 @@
 #include <stdlib.h>
 #include <string.h>
 
-void delete(char *str) {
-    // Check if the path contains quotes
-    int quoted = (str[0] == '"') && (str[strlen(str) - 1] == '"');
-
-    // Process the path to remove quotes
-    char processed_path[1024];
-    if (quoted) {
-        // Copy the path without the quotes
-        strncpy(processed_path, str + 1, strlen(str) - 2);
-        processed_path[strlen(str) - 2] = '\0';
-    } else {
-        // Copy the path as is
-        strcpy(processed_path, str);
+void mypipe(char **argv1, char **argv2, char **input) {
+    int i;
+    // Split the input into two arrays based on the pipe symbol '|'
+    for (i = 0; input[i] != NULL; i++) {
+        if (strcmp(input[i], "|") == 0) {
+            // Found the pipe symbol, split the input
+            argv1[i] = NULL; // Terminate first argument array
+            int j;
+            for (j = 0; input[i + j + 1] != NULL; j++) {
+                argv2[j] = input[i + j + 1];
+            }
+            argv2[j] = NULL; // Terminate second argument array
+            break;
+        } else {
+            argv1[i] = input[i];
+        }
     }
-
-    // Delete the file
-    if (remove(processed_path) != 0) {
-        perror("Error deleting file");
-    }
+    // Terminate last argument array
+    argv1[i] = NULL;
 }
 
 int main() {
     // Example usage
-    char *path1 = "file.txt";
-    char *path2 = "\"file with spaces.txt\"";
-    delete(path1);
-    delete(path2);
+    char *input[] = {"ls", "-", "l", "|", "grep", "g", NULL};
+    char *argv1[1024];
+    char *argv2[1024];
+    mypipe(argv1, argv2, input);
+
+    printf("First command arguments:\n");
+    for (int i = 0; argv1[i] != NULL; i++) {
+        printf("%s\n", argv1[i]);
+    }
+
+    printf("\nSecond command arguments:\n");
+    for (int i = 0; argv2[i] != NULL; i++) {
+        printf("%s\n", argv2[i]);
+    }
+
     return 0;
 }
+
